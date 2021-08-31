@@ -12,24 +12,28 @@ GameBuino by Preston Rooker
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address (generally 0x3D or 0x3C)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-enum direction{
-  up,
-  down,
-  left,
-  right,
-  none
-};
+#define NONE  0
+#define UP    1
+#define DOWN  2
+#define LEFT  3
+#define RIGHT 4
+#define SNAKE 5
 
 //snake
-direction dir = none;
-int16_t length = 3;
-byte snakeX;
-byte snakeY;
+byte dir = RIGHT;
+uint16_t length = 3;
+uint16_t numSnakeBlocks = 1;
+byte headX;
+byte headY;
+byte tailX;
+byte tailY;
 
 //board
-#define BOARD_WIDTH 40
-#define BOARD_HEIGHT 20
-int16_t board[BOARD_WIDTH][BOARD_HEIGHT];
+#define BOARD_WIDTH 32
+#define BOARD_HEIGHT 16
+byte board[BOARD_WIDTH][BOARD_HEIGHT];
+
+//going to try to do byte array of 32 x 16 by using 4x4 blocks
 
 void drawBlock(byte x, byte y, uint16_t color = SSD1306_WHITE); //apparently for some reason if the function has a default parameter, it needs to be put before setup
 
@@ -55,10 +59,10 @@ void setup()
   // Clear the buffer
   display.clearDisplay();
 
-  dir = up;
-  snakeX = 20;
-  snakeY = 10;
-  drawBlock(snakeX,snakeY);
+  dir = RIGHT;
+  headX = 20;
+  headY = 10;
+  drawBlock(headX,headY);
   display.display();
   delay(1000);
 
@@ -75,42 +79,50 @@ void loop()
 //40 by 20
 void drawBlock(byte x, byte y, uint16_t color = SSD1306_WHITE)
 {
-  x = x*3 + 6;
-  y = y*3 + 3;
-  display.fillRect(x,y,3,3,color);
+  x = x*4;
+  y = y*4;
+  display.fillRect(x,y,4,4,color);
 }
 
 void moveSnake(){
   switch(dir){
-    case none:
+    case NONE:
       break;
-    case up:
-      snakeY--;
-      if(snakeY < 0){
-          snakeY = BOARD_HEIGHT;
+    case UP:
+      if(headY == 0){
+          headY = BOARD_HEIGHT;
+      }
+      else{
+        headY--;
       }
       break;
-    case down:
-      snakeY++;
-      if(snakeY > BOARD_HEIGHT){
-          snakeY = 0;
+    case DOWN:
+      if(headY == BOARD_HEIGHT){
+          headY = 0;
+      }
+      else{
+        headY++;
       }
       break;
-    case left:
-      snakeX--;
-      if(snakeX < 0){
-          snakeX = BOARD_WIDTH;
+    case LEFT:
+      if(headX == 0){
+          headX = BOARD_WIDTH;
+      }
+      else{
+        headX--;
       }
       break;
-    case right:
-      snakeX++;
-      if(snakeX > BOARD_WIDTH){
-          snakeX = 0;
+    case RIGHT:
+      if(headX == BOARD_WIDTH){
+          headX = 0;
+      }
+      else{
+        headX++;
       }
       break;
   }
-  board[snakeX][snakeY] = length + 1;
-  drawBlock(snakeX,snakeY);
+  board[headX][headY] = length + 1;
+  drawBlock(headX,headY);
 }
 
 void processBoard(){
