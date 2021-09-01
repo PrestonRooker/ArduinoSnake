@@ -19,19 +19,23 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define RIGHT 4
 #define SNAKE 5
 
+//344 bytes are used just by the libraries and display construction >:(
+
 //snake
 byte dir = RIGHT;
-uint16_t length = 3;
-uint16_t numSnakeBlocks = 1;
+//uint16_t length = 3;
+//uint16_t numSnakeBlocks = 1; //can only use one uint16_t for this by simply putting detection for removing tail pixel in placement pixel and then just not removing a tail pixel when food is eaten
 byte headX;
 byte headY;
 byte tailX;
 byte tailY;
+byte foodX;
+byte foodY;
 
 //board
 #define BOARD_WIDTH 32
 #define BOARD_HEIGHT 16
-byte board[BOARD_WIDTH][BOARD_HEIGHT];
+byte board[BOARD_WIDTH][BOARD_HEIGHT]; //could potentially try storing everying into two bits, only giving direction up down left or right
 
 //going to try to do byte array of 32 x 16 by using 4x4 blocks
 
@@ -52,31 +56,41 @@ void setup()
 
   for(byte x = 0; x < BOARD_WIDTH; x++){
     for(byte y = 0; y < BOARD_HEIGHT; y++){
-      board[x][y] = -1; //set each cell to empty
+      board[x][y] = NONE; //set each cell to NONE
     }
   }
 
   // Clear the buffer
   display.clearDisplay();
 
-  dir = RIGHT;
-  headX = 20;
-  headY = 10;
+  foodX = 0;
+  foodY = 0;
+
+  dir = LEFT;
+  headX = 16;
+  headY = 8;
+  tailX = 16;
+  tailY = 10;
   drawBlock(headX,headY);
+  board[headX][headY] = SNAKE;
+  drawBlock(16,9);
+  board[16][9] = UP;
+  drawBlock(tailX,tailY);
+  board[tailX][tailY] = UP;
   display.display();
   delay(1000);
 
+  display.display();
 }
 
 void loop() 
 {
   // put your main code here, to run repeatedly:
   moveSnake();
-  processBoard();
   display.display();
 }
 
-//40 by 20
+//32 by 16
 void drawBlock(byte x, byte y, uint16_t color = SSD1306_WHITE)
 {
   x = x*4;
@@ -89,15 +103,17 @@ void moveSnake(){
     case NONE:
       break;
     case UP:
+      board[headX][headY] = UP;
       if(headY == 0){
-          headY = BOARD_HEIGHT;
+          headY = BOARD_HEIGHT - 1;
       }
       else{
         headY--;
       }
       break;
     case DOWN:
-      if(headY == BOARD_HEIGHT){
+      board[headX][headY] = DOWN;
+      if(headY == BOARD_HEIGHT - 1){
           headY = 0;
       }
       else{
@@ -105,15 +121,17 @@ void moveSnake(){
       }
       break;
     case LEFT:
+      board[headX][headY] = LEFT;
       if(headX == 0){
-          headX = BOARD_WIDTH;
+          headX = BOARD_WIDTH - 1;
       }
       else{
         headX--;
       }
       break;
     case RIGHT:
-      if(headX == BOARD_WIDTH){
+      board[headX][headY] = RIGHT;
+      if(headX == BOARD_WIDTH - 1){
           headX = 0;
       }
       else{
@@ -121,20 +139,47 @@ void moveSnake(){
       }
       break;
   }
-  board[headX][headY] = length + 1;
-  drawBlock(headX,headY);
-}
-
-void processBoard(){
-  for(byte x = 0; x < BOARD_WIDTH; x++){
-    for(byte y = 0; y < BOARD_HEIGHT; y++){
-      if(board[x][y] > 0){ //snake in cell
-        board[x][y]--;
-      }
-      else if (board[x][y] == 0){ //snake just left cell
-        drawBlock(x,y,SSD1306_BLACK);
-        board[x][y]--;
-      }
+  if(headX != foodX || headY != foodY){
+    drawBlock(tailX,tailY,SSD1306_BLACK);
+    switch(board[tailX][tailY]){
+      case UP:
+        board[tailX][tailY] = NONE;
+        if(tailY == 0){
+            tailY = BOARD_HEIGHT - 1;
+        }
+        else{
+          tailY--;
+        }
+        break;
+      case DOWN:
+        board[tailX][tailY] = NONE;
+        if(tailY == BOARD_HEIGHT - 1){
+            tailY = 0;
+        }
+        else{
+          tailY++;
+        }
+        break;
+      case LEFT:
+        board[tailX][tailY] = NONE;
+        if(tailX == 0){
+            tailX = BOARD_WIDTH - 1;
+        }
+        else{
+          tailX--;
+        }
+        break;
+      case RIGHT:
+        board[tailX][tailY] = NONE;
+        if(tailX == BOARD_WIDTH - 1){
+            tailX = 0;
+        }
+        else{
+          tailX++;
+        }
+        break;
     }
   }
+  board[headX][headY] = SNAKE;
+  drawBlock(headX,headY);
 }
