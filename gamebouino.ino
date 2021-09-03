@@ -12,12 +12,18 @@ GameBuino by Preston Rooker
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address (generally 0x3D or 0x3C)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+#define VRX_PIN A0
+#define VRY_PIN A1
+#define SW_PIN 2
+
 #define NONE  0
 #define UP    1
 #define DOWN  2
 #define LEFT  3
 #define RIGHT 4
 #define SNAKE 5
+
+#define FRAMERATECONST 100
 
 //344 bytes are used just by the libraries and display construction >:(
 
@@ -45,6 +51,9 @@ void setup()
 {
   // put your setup code here, to run once:
   //Serial.begin(9600); //REMOVE ON RELEASE
+  pinMode(VRX_PIN,INPUT);
+  pinMode(VRY_PIN,INPUT);
+  pinMode(SW_PIN,INPUT_PULLUP);
 
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -86,8 +95,46 @@ void setup()
 void loop() 
 {
   // put your main code here, to run repeatedly:
+  // Serial.print("X: ");
+  // Serial.print(analogRead(VRX_PIN));
+  // Serial.print("  Y: ");
+  // Serial.print(analogRead(VRY_PIN));
+  // Serial.print("  SW: ");
+  // Serial.println(digitalRead(SW_PIN));
+  int jsX = analogRead(VRX_PIN);
+  int jsY = analogRead(VRY_PIN);
+  long initTime = millis();
+  if(jsX > 800){
+    dir = RIGHT;
+  }
+  else if(jsX < 200){
+    dir = LEFT;
+  }
+  else if(jsY < 200){
+    dir = UP;
+  }
+  else if(jsY > 800){
+    dir = DOWN;
+  }
+
+  // Serial.print("direction: ");
+  // switch(dir){
+  //   case UP:
+  //     Serial.println("UP");
+  //     break;
+  //   case DOWN:
+  //     Serial.println("DOWN");
+  //     break;
+  //   case LEFT:
+  //     Serial.println("LEFT");
+  //     break;
+  //   case RIGHT:
+  //     Serial.println("RIGHT");
+  //     break;
+  // }
   moveSnake();
   display.display();
+  delay(FRAMERATECONST -(millis() - initTime));
 }
 
 //32 by 16
