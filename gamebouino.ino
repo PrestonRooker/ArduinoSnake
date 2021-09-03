@@ -23,9 +23,12 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #define RIGHT 4
 #define SNAKE 5
 
-#define FRAMERATECONST 100
+#define FRAMERATECONST 130
 
-//344 bytes are used just by the libraries and display construction >:(
+//344  bytes are used just by the libraries and display construction >:(
+//1100 bytes are needed for the OLED buffer
+//so good luck working with like only 800 bytes
+
 
 //snake
 byte dir = RIGHT;
@@ -69,11 +72,12 @@ void setup()
     }
   }
 
+  //randomSeed(A2); //A2 has nothing connected to it, which causes noise which seeds the random
+  randomSeed(12);
   // Clear the buffer
   display.clearDisplay();
 
-  foodX = 0;
-  foodY = 0;
+  generateFood();
 
   dir = UP;
   headX = 16;
@@ -103,7 +107,29 @@ void loop()
   delay(FRAMERATECONST -(millis() - initTime));
 }
 
-//code food drawing, code collision detection
+//code food drawing
+
+void generateFood(){
+  do{
+    foodX = random(0,BOARD_WIDTH-1);
+    foodY = random(0,BOARD_HEIGHT-1);
+  }while(board[foodX][foodY] != NONE);
+  drawFood();
+}
+
+void drawFood(){
+  display.drawPixel(foodX*4+1,foodY*4,SSD1306_WHITE);
+  display.drawPixel(foodX*4+2,foodY*4,SSD1306_WHITE);
+
+  display.drawPixel(foodX*4,foodY*4+1,SSD1306_WHITE);
+  display.drawPixel(foodX*4,foodY*4+2,SSD1306_WHITE);
+
+  display.drawPixel(foodX*4+1,foodY*4+3,SSD1306_WHITE);
+  display.drawPixel(foodX*4+2,foodY*4+3,SSD1306_WHITE);
+
+  display.drawPixel(foodX*4+3,foodY*4+1,SSD1306_WHITE);
+  display.drawPixel(foodX*4+3,foodY*4+2,SSD1306_WHITE);
+}
 
 //32 by 16
 void drawBlock(byte x, byte y, uint16_t color = SSD1306_WHITE)
@@ -211,6 +237,9 @@ void moveSnake(){
         }
         break;
     }
+  }
+  else{
+    generateFood();
   }
   detectCollision();
   board[headX][headY] = SNAKE;
