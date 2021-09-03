@@ -75,7 +75,7 @@ void setup()
   foodX = 0;
   foodY = 0;
 
-  dir = LEFT;
+  dir = UP;
   headX = 16;
   headY = 8;
   tailX = 16;
@@ -95,47 +95,15 @@ void setup()
 void loop() 
 {
   // put your main code here, to run repeatedly:
-  // Serial.print("X: ");
-  // Serial.print(analogRead(VRX_PIN));
-  // Serial.print("  Y: ");
-  // Serial.print(analogRead(VRY_PIN));
-  // Serial.print("  SW: ");
-  // Serial.println(digitalRead(SW_PIN));
-  int jsX = analogRead(VRX_PIN);
-  int jsY = analogRead(VRY_PIN);
+  
   long initTime = millis();
-  if(jsX > 800){
-    dir = RIGHT;
-  }
-  else if(jsX < 200){
-    dir = LEFT;
-  }
-  else if(jsY < 200){
-    dir = UP;
-  }
-  else if(jsY > 800){
-    dir = DOWN;
-  }
-
-  // Serial.print("direction: ");
-  // switch(dir){
-  //   case UP:
-  //     Serial.println("UP");
-  //     break;
-  //   case DOWN:
-  //     Serial.println("DOWN");
-  //     break;
-  //   case LEFT:
-  //     Serial.println("LEFT");
-  //     break;
-  //   case RIGHT:
-  //     Serial.println("RIGHT");
-  //     break;
-  // }
+  calculateDirection();
   moveSnake();
   display.display();
   delay(FRAMERATECONST -(millis() - initTime));
 }
+
+//code food drawing, code collision detection
 
 //32 by 16
 void drawBlock(byte x, byte y, uint16_t color = SSD1306_WHITE)
@@ -143,6 +111,23 @@ void drawBlock(byte x, byte y, uint16_t color = SSD1306_WHITE)
   x = x*4;
   y = y*4;
   display.fillRect(x,y,4,4,color);
+}
+
+void calculateDirection(){
+  int jsX = analogRead(VRX_PIN);
+  int jsY = analogRead(VRY_PIN);
+  if(jsX > 800 && dir != LEFT){
+    dir = RIGHT;
+  }
+  else if(jsX < 200 && dir != RIGHT){
+    dir = LEFT;
+  }
+  else if(jsY < 200 && dir != DOWN){
+    dir = UP;
+  }
+  else if(jsY > 800 && dir != UP){
+    dir = DOWN;
+  }
 }
 
 void moveSnake(){
@@ -227,6 +212,35 @@ void moveSnake(){
         break;
     }
   }
+  detectCollision();
   board[headX][headY] = SNAKE;
   drawBlock(headX,headY);
+}
+
+void detectCollision(){
+  if(board[headX][headY] != NONE){
+    runGameOver();
+  }
+}
+
+void runGameOver(){
+  display.invertDisplay(true);
+  delay(200);
+  display.invertDisplay(false);
+  delay(200);
+  display.invertDisplay(true);
+  delay(200);
+  display.invertDisplay(false);
+  delay(200);
+  display.invertDisplay(true);
+  delay(200);
+  display.invertDisplay(false);
+  delay(200);
+  display.invertDisplay(true);
+  delay(200);
+  display.invertDisplay(false);
+  delay(200);
+  display.clearDisplay();
+  display.display();
+  for(;;); //Don't proceed, loop forever
 }
