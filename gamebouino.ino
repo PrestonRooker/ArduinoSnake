@@ -80,7 +80,7 @@ void setup()
   pinMode(VRY_PIN,INPUT);
   pinMode(SW_PIN,INPUT_PULLUP);
   
-  randomSeed(A2); //A2 has nothing connected to it, which causes noise which seeds the random
+  randomSeed(analogRead(A2)); //A2 has nothing connected to it, which causes noise which seeds the random
   //randomSeed(12);
 
   // Clear the buffer
